@@ -6,7 +6,7 @@
 
 ### Learn Linux from the command line to production operations.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-16803a.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-16803a.svg)](LICENSE)
 [![Learning Path](https://img.shields.io/badge/Path-Beginner%20to%20Production-0f172a.svg)](#choose-your-learning-path)
 [![Primary OS](https://img.shields.io/badge/Primary-Ubuntu%20Server-e95420.svg)](#distribution-strategy)
 [![Contributions](https://img.shields.io/badge/Contributions-Welcome-2563eb.svg)](#contributing)
@@ -14,7 +14,7 @@
 
 **Documentation • Labs • Projects • Troubleshooting • Administration • Security • Automation • Production Engineering**
 
-[Start Here](#start-here) · [Roadmap](#repository-roadmap) · [Projects](#linux-projects) · [Troubleshooting](#troubleshooting-and-operations) · [Contribute](#contributing)
+[Start Here](00-Start-Here/) · [Beginner to Advanced](01-Beginner-to-Advanced/) · [Roadmap](ROADMAP.md) · [Projects](04-Projects/) · [Troubleshooting](03-Troubleshooting/) · [Contribute](CONTRIBUTING.md)
 
 </div>
 
@@ -80,6 +80,8 @@ Arch Linux, openSUSE, Alpine Linux, Kali Linux, and other specialized distributi
 
 ## Start here
 
+New readers should begin with [00-Start-Here](00-Start-Here/). It explains the prerequisites, lab setup, safety rules, study routes, progress tracking, and how to use Linux World.
+
 ### 1. Prepare your lab
 
 Choose one safe environment:
@@ -119,20 +121,20 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 
 ![Linux World learning paths](assets/learning-paths.svg)
 
-| Path | Recommended order | Goal |
-| --- | --- | --- |
-| Linux from zero | 01 → 02 → 03 → 04 | Become comfortable using and administering a Linux system |
-| System administration | 02 → 03 → 04 → 05 → 06 | Operate users, services, storage, networking, and security |
-| DevOps and cloud | 01 → 03 → 05 → 07 → 09 → 10 | Use Linux confidently across automation and delivery systems |
-| SRE and operations | 03 → 05 → 06 → 08 → 09 → 11 | Diagnose failures and operate reliable services |
-| Security | 01 → 02 → 06 → 08 → 11 | Understand access, auditing, hardening, and incident evidence |
-| Interview preparation | 01 → 03 → 05 → 08 → 12 | Explain Linux clearly and solve realistic scenarios |
+| Goal | Recommended route |
+| --- | --- |
+| Learn Linux from the beginning | [Start Here](00-Start-Here/) → [Beginner to Advanced](01-Beginner-to-Advanced/) → [Labs](07-Labs/) → [Projects](04-Projects/) |
+| System administration | [Beginner to Advanced](01-Beginner-to-Advanced/) → [Commands and Cheat Sheets](02-Commands-and-Cheat-Sheets/) → [Troubleshooting](03-Troubleshooting/) → [Production Operations](11-Production-Operations/) |
+| DevOps and cloud | [Beginner to Advanced](01-Beginner-to-Advanced/) → [Toolkit](12-Toolkit/) → [DevOps and Cloud](10-DevOps-and-Cloud/) → [Projects](04-Projects/) |
+| SRE and operations | [Beginner to Advanced](01-Beginner-to-Advanced/) → [Troubleshooting](03-Troubleshooting/) → [Internals](09-Internals/) → [Production Operations](11-Production-Operations/) |
+| Security | [Beginner to Advanced](01-Beginner-to-Advanced/) → [Security](08-Security/) → [Internals](09-Internals/) → [Security Labs](07-Labs/) |
+| Interview preparation | [Beginner to Advanced](01-Beginner-to-Advanced/) → [Interview Preparation](05-Interview-Preparation/) → [Projects](04-Projects/) |
 
-## Repository roadmap
+## What Linux World covers
 
 ![Linux World roadmap](assets/repository-roadmap.svg)
 
-### 01. Linux foundations
+### Linux foundations
 
 - What Linux is and how distributions differ
 - Installing Linux and preparing a safe lab
@@ -145,7 +147,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Text processing with `cut`, `sort`, `uniq`, `tr`, `wc`, `sed`, and `awk`
 - Editors, archives, compression, checksums, and downloads
 
-### 02. Users, groups, and permissions
+### Users, groups, and permissions
 
 - Users, groups, UIDs, GIDs, and account databases
 - Ownership and permission bits
@@ -157,7 +159,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - PAM foundations and authentication flow
 - Safe privilege troubleshooting
 
-### 03. System administration
+### System administration
 
 - Processes, signals, jobs, priorities, and resource limits
 - `systemd`, units, targets, timers, dependencies, and journal logs
@@ -169,7 +171,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Hardware discovery and device management
 - Logs, rotation, retention, and audit trails
 
-### 04. Storage and filesystems
+### Storage and filesystems
 
 - Disks, partitions, filesystems, inodes, and mount points
 - `lsblk`, `blkid`, `fdisk`, `parted`, `mkfs`, and `mount`
@@ -181,7 +183,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Filesystem checks, corruption risks, and recovery workflows
 - Backup types, restore testing, and disaster recovery
 
-### 05. Linux networking
+### Linux networking
 
 - Interfaces, IP addresses, subnets, routes, ports, and sockets
 - DNS resolution and `/etc/hosts`
@@ -193,7 +195,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Network namespaces and virtual networking
 - Systematic network troubleshooting
 
-### 06. Linux security
+### Linux security
 
 - Threat models and attack surface
 - Secure installation and baseline hardening
@@ -207,7 +209,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Incident containment and evidence preservation
 - CIS benchmark concepts and configuration validation
 
-### 07. Shell scripting and automation
+### Shell scripting and automation
 
 - Bash syntax, variables, arrays, tests, loops, and functions
 - Arguments, input validation, exit codes, and traps
@@ -219,7 +221,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Configuration management foundations
 - Testing scripts with ShellCheck and automated checks
 
-### 08. Troubleshooting and operations
+### Troubleshooting and operations
 
 - A repeatable investigation framework
 - Boot failures and emergency targets
@@ -233,7 +235,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Evidence collection with metrics, logs, traces, events, and system state
 - Mitigation, recovery, verification, and prevention
 
-### 09. Performance and observability
+### Performance and observability
 
 - The USE and RED methods
 - CPU scheduling, load average, memory, cache, swap, and I/O
@@ -243,7 +245,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - eBPF foundations and safe production observation
 - Alert quality, dashboards, and operational signals
 
-### 10. Linux for DevOps, cloud, and containers
+### Linux for DevOps, cloud, and containers
 
 - Linux on AWS, Azure, and Google Cloud
 - Cloud-init and image preparation
@@ -255,7 +257,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Reverse proxies, application services, and databases
 - Immutable infrastructure and patching strategies
 
-### 11. Production engineering
+### Production engineering
 
 - Server build standards and operational readiness
 - Reliability, availability, recovery, and blast radius
@@ -267,7 +269,7 @@ Projects turn commands into evidence of skill. Start with beginner projects, the
 - Fleet management, drift detection, and policy enforcement
 - Production debugging case files
 
-### 12. Interviews and assessments
+### Interviews and assessments
 
 - Beginner, intermediate, and senior question banks
 - Command interpretation exercises
@@ -343,13 +345,13 @@ Choose the area that matches what you want to learn, practise, build, or improve
 
 ### Begin your Linux journey
 
-Follow the [Learning Path](01-learning-path/) for a structured journey from first principles to advanced Linux administration and production operations.
+Follow [Beginner to Advanced](01-Beginner-to-Advanced/) for a structured 20-part journey from first principles to Linux administration, troubleshooting, automation, security, and a complete final project.
 
 The path covers terminal use, files, permissions, processes, services, packages, storage, networking, security, scripting, automation, troubleshooting, performance, containers, cloud, and production practices.
 
 ### Find and understand commands
 
-Use [Commands and Cheat Sheets](02-commands-and-cheat-sheets/) to find commands by task instead of memorizing disconnected syntax.
+Use [Commands and Cheat Sheets](02-Commands-and-Cheat-Sheets/) to find commands by task instead of memorizing disconnected syntax.
 
 Each detailed command guide explains:
 
@@ -366,7 +368,7 @@ Short cheat sheets are available for fast revision and operational reference.
 
 ### Develop troubleshooting skills
 
-Explore [Troubleshooting](03-troubleshooting/) through progressive difficulty levels:
+Explore [Troubleshooting](03-Troubleshooting/) through progressive difficulty levels:
 
 - **Junior:** Files, permissions, packages, processes, services, disk space, and basic networking
 - **Mid-level:** Boot problems, systemd dependencies, CPU, memory, I/O, DNS, routing, authentication, and logs
@@ -376,7 +378,7 @@ Case files, decision trees, and controlled failure exercises help readers invest
 
 ### Build practical projects
 
-Use [Projects](04-projects/) to turn Linux knowledge into working systems and portfolio evidence.
+Use [Projects](04-Projects/) to turn Linux knowledge into working systems and portfolio evidence.
 
 Projects are organized for junior, mid-level, and senior engineers and cover:
 
@@ -395,7 +397,7 @@ Every complete project includes requirements, architecture, build instructions, 
 
 ### Prepare for Linux interviews
 
-Use [Interview Preparation](05-interview-preparation/) for:
+Use [Interview Preparation](05-Interview-Preparation/) for:
 
 - Junior Linux interviews
 - Mid-level Linux interviews
@@ -411,14 +413,14 @@ Senior material emphasizes Linux internals, performance, system design, reliabil
 
 ### Study the engineer notebooks
 
-The [Engineer Notebooks](06-engineer-notebooks/) provide compact visual learning and revision resources.
+The [Engineer Notebooks](06-Engineer-Notebooks/) provide compact visual learning and revision resources.
 
 - **Junior Linux Notebook:** Foundations, commands, administration, networking, and introductory troubleshooting
 - **Senior Linux Notebook:** Internals, production behavior, failure modes, performance, reliability, security, recovery, and architecture decisions
 
 ### Practise in Linux labs
 
-Use [Labs](07-labs/) to build hands-on confidence through:
+Use [Labs](07-Labs/) to build hands-on confidence through:
 
 - Guided labs
 - Independent exercises
@@ -432,17 +434,17 @@ Labs are designed for disposable environments. Never perform destructive exercis
 
 ### Strengthen Linux security
 
-Explore [Security](08-security/) for Linux hardening, privileged access, SSH, firewalls, SELinux, AppArmor, auditing, secrets, certificates, vulnerability management, compliance baselines, and incident forensics.
+Explore [Security](08-Security/) for Linux hardening, privileged access, SSH, firewalls, SELinux, AppArmor, auditing, secrets, certificates, vulnerability management, compliance baselines, and incident forensics.
 
 ### Understand Linux internals
 
-Explore [Internals](09-internals/) to understand how Linux works beneath ordinary commands and configuration files.
+Explore [Internals](09-Internals/) to understand how Linux works beneath ordinary commands and configuration files.
 
 Topics include boot, kernel behavior, processes, scheduling, memory management, filesystems, I/O, networking, namespaces, cgroups, system calls, and performance internals.
 
 ### Apply Linux to DevOps and cloud engineering
 
-Use [DevOps and Cloud](10-devops-and-cloud/) to study Linux in:
+Use [DevOps and Cloud](10-DevOps-and-Cloud/) to study Linux in:
 
 - CI/CD systems
 - Cloud servers
@@ -456,31 +458,35 @@ Use [DevOps and Cloud](10-devops-and-cloud/) to study Linux in:
 
 ### Operate production systems
 
-Use [Production Operations](11-production-operations/) for runbooks, playbooks, on-call practices, operational readiness, monitoring, capacity planning, patching, backups, disaster recovery, incident response, and postmortems.
+Use [Production Operations](11-Production-Operations/) for runbooks, playbooks, on-call practices, operational readiness, monitoring, capacity planning, patching, backups, disaster recovery, incident response, and postmortems.
 
 ### Use scripts and operational templates
 
-The [Toolkit](12-toolkit/) provides tested Bash and Python utilities, health checks, diagnostic tools, monitoring helpers, security checks, and reusable operational templates.
+The [Toolkit](12-Toolkit/) provides tested Bash and Python utilities, health checks, diagnostic tools, monitoring helpers, security checks, and reusable operational templates.
 
 ### Compare Linux distributions
 
-Use [Distribution Notes](13-distribution-notes/) for verified differences among Ubuntu Server, Debian, Rocky Linux, Red Hat Enterprise Linux, and Fedora.
+Use [Distribution Notes](13-Distribution-Notes/) for verified differences among Ubuntu Server, Debian, Rocky Linux, Red Hat Enterprise Linux, and Fedora.
 
 ### Continue learning
 
-Visit [Resources](14-resources/) for the glossary, official documentation, trusted books, useful websites, and carefully selected video channels.
+Visit [Resources](14-Resources/) for the glossary, official documentation, trusted books, useful websites, and carefully selected video channels.
+
 ## Repository status
 
 | Area | Status |
 | --- | --- |
-| README and architecture | In progress |
-| Foundations | Planned |
-| Administration | Planned |
-| Networking | Planned |
-| Security | Planned |
-| Automation | Planned |
+| README and repository policies | Available |
+| Start Here | Available |
+| Beginner to Advanced | In progress |
+| Commands and Cheat Sheets | Planned |
 | Troubleshooting | Planned |
 | Projects | Planned |
+| Interview Preparation | Planned |
+| Engineer Notebooks | Planned |
+| Labs | Planned |
+| Security and Internals | Planned |
+| DevOps, Cloud, and Production Operations | Planned |
 
 Status labels should be updated as material is published. The roadmap will prioritize completeness and accuracy over releasing unfinished lessons.
 
@@ -506,9 +512,9 @@ Contributions that improve clarity, correctness, safety, accessibility, or distr
 
 Before opening a pull request:
 
-1. Read `CONTRIBUTING.md`.
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md).
 2. Search existing issues and pull requests.
-3. Use the repository documentation standard.
+3. Follow [RESOURCE-STANDARD.md](RESOURCE-STANDARD.md).
 4. Test every command in a clean lab.
 5. State the distributions and versions tested.
 6. Remove secrets, private addresses, tokens, and personal data.
@@ -518,7 +524,7 @@ Good first contributions include fixing unclear instructions, adding verified ex
 
 ## Security
 
-Do not open a public issue for a vulnerability that could put users at risk. Follow the private reporting process in `SECURITY.md`.
+Do not open a public issue for a vulnerability that could put users at risk. Follow the private reporting process in [SECURITY.md](SECURITY.md).
 
 All examples must use placeholder credentials and non-sensitive test data. Never commit real tokens, passwords, private keys, cloud credentials, or personal information.
 
@@ -539,9 +545,9 @@ External links are starting points, not substitutes for testing. Commands and be
 
 ## License
 
-Linux World is released under the [MIT License](LICENSE).
+Linux World is governed by the [Linux World Proprietary License](LICENSE).
 
-Unless stated otherwise, original documentation, examples, and code in this repository are copyright © 2026 Ann Felix and VERIQTA.
+Copyright © 2026 Ann Felix and VERIQTA. All rights reserved. Public availability does not grant permission to copy, modify, redistribute, republish, translate, teach from, commercialize, or create derivative works from the repository. See [NOTICE.md](NOTICE.md) for the public copyright and use notice.
 
 ## Support Linux World
 
