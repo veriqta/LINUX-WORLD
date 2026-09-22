@@ -4,17 +4,6 @@ This manifest describes the validated contents of the Linux World interview and 
 
 ## Database size
 
-| Content | Count |
-| --- | ---: |
-| Public files | 382 |
-| Junior, Mid-Level and Senior core domains | 36 |
-| Original answered interview questions | 684 |
-| Expanded domain assessment items | 2,284 |
-| Original scored practical tasks | 36 |
-| Certification mock questions | 500 |
-| Certification mock answer explanations | 500 |
-| Total candidate assessment items | 3,504 |
-
 The assessment total excludes navigation pages, study plans, evaluator guidance, progress tracking and answer-key headings.
 
 ## Assessment formats
