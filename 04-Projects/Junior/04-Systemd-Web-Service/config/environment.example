@@ -1,0 +1,6 @@
+PROJECT_NAME=linux-world-web
+SERVICE_NAME=linux-world-web
+SERVICE_USER=lwweb
+APP_DIR=/opt/linux-world-web
+PORT=18080
+

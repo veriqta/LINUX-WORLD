@@ -1,0 +1,2 @@
+Evidence bundle for Systemd Investigator.
+Interpret results in system and service context. Absence of a finding is not proof of health.

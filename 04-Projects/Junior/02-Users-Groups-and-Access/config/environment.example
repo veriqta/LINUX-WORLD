@@ -1,0 +1,5 @@
+PROJECT_NAME=linux-world-access
+LAB_GROUP=lwoperators
+LAB_USER=lwoperator
+SUDO_COMMAND=/usr/bin/systemctl status
+

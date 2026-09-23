@@ -1,0 +1,3 @@
+● example.service - Example service
+   Loaded: loaded (/etc/systemd/system/example.service; enabled)
+   Active: failed (Result: exit-code) since Thu 2026-01-15 10:04:00 UTC

@@ -1,0 +1,5 @@
+PROJECT_NAME=linux-world-central-logs
+SPOOL_DIR=/tmp/linux-world-log-spool
+COLLECTOR_DIR=/tmp/linux-world-log-collector
+RETENTION_DAYS=7
+

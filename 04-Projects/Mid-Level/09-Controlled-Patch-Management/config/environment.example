@@ -1,0 +1,6 @@
+PROJECT_NAME=linux-world-patching
+FLEET_FILE=config/fleet.txt
+OUTPUT_DIR=/tmp/linux-world-patch-report
+CANARY=host-a
+APPLY=false
+

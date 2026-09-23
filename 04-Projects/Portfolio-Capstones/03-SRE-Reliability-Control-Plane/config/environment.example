@@ -1,0 +1,7 @@
+PROJECT_SLUG=sre-reliability-control-plane
+STATE_DIR=/tmp/lw-capstone-sre
+RELEASE_VERSION=1.0.0
+SITES=control,workload
+RPO_SECONDS=300
+RTO_SECONDS=120
+

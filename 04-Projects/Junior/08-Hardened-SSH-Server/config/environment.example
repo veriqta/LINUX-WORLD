@@ -1,0 +1,6 @@
+PROJECT_NAME=linux-world-ssh
+ADMIN_GROUP=lwsshadmins
+ADMIN_USER=lwsshadmin
+PUBLIC_KEY_FILE=config/lab_key.pub
+SSHD_DROPIN=/etc/ssh/sshd_config.d/60-linux-world.conf
+

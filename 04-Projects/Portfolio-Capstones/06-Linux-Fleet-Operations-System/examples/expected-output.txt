@@ -1,0 +1,10 @@
+Representative output:
+
+PASS: end-to-end state verified
+PASS: explicit denial control recorded
+PASS: bounded synthetic load completed
+PASS: failure detected, recovered, and verified
+PASS: restore integrity and RTO verified
+
+Use actual measured results in the completed capstone.
+

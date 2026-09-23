@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -u
+ROOT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd); CONFIG="$ROOT_DIR/config/environment.conf"; [ -f "$CONFIG" ] || CONFIG="$ROOT_DIR/config/environment.example"; . "$CONFIG"
+need_root(){ [ "$(id -u)" -eq 0 ] || exit 77; }; key_path(){ case "$PUBLIC_KEY_FILE" in /*) printf '%s\n' "$PUBLIC_KEY_FILE";; *) printf '%s/%s\n' "$ROOT_DIR" "$PUBLIC_KEY_FILE";; esac; }
+setup(){ need_root; command -v sshd >/dev/null; [ -r "$(key_path)" ] || { printf 'Create disposable lab_key.pub first.\n' >&2; exit 66; }; getent group "$ADMIN_GROUP" >/dev/null || groupadd "$ADMIN_GROUP"; id "$ADMIN_USER" >/dev/null 2>&1 || useradd -m -s /bin/bash "$ADMIN_USER"; usermod -aG "$ADMIN_GROUP" "$ADMIN_USER"; home=$(getent passwd "$ADMIN_USER"|cut -d: -f6); install -d -m700 -o "$ADMIN_USER" -g "$ADMIN_USER" "$home/.ssh"; install -m600 -o "$ADMIN_USER" -g "$ADMIN_USER" "$(key_path)" "$home/.ssh/authorized_keys"; cp -a /etc/ssh/sshd_config /etc/ssh/sshd_config.linux-world.bak; sed "s/__GROUP__/$ADMIN_GROUP/g" "$ROOT_DIR/config/60-linux-world.conf" >"$SSHD_DROPIN"; chmod 600 "$SSHD_DROPIN"; sshd -t; systemctl reload sshd 2>/dev/null || systemctl reload ssh; }
+verify(){ sshd -t; getent group "$ADMIN_GROUP" | grep -q "$ADMIN_USER"; grep -q '^PasswordAuthentication no' "$SSHD_DROPIN"; printf 'PASS: SSH policy validates; test a second session.\n'; }
+cleanup(){ need_root; rm -f "$SSHD_DROPIN"; [ -f /etc/ssh/sshd_config.linux-world.bak ] && mv /etc/ssh/sshd_config.linux-world.bak /etc/ssh/sshd_config; sshd -t; systemctl reload sshd 2>/dev/null || systemctl reload ssh; id "$ADMIN_USER" >/dev/null 2>&1 && userdel -r "$ADMIN_USER" || true; getent group "$ADMIN_GROUP" >/dev/null && groupdel "$ADMIN_GROUP" || true; }
+case "${1:-verify}" in install|configure) setup;; run|verify|test) verify;; cleanup) cleanup;; *) exit 64;; esac
+
