@@ -1,8 +1,0 @@
-PROJECT_NAME=linux-world-lvm
-IMAGE=/tmp/linux-world-lvm.img
-IMAGE_SIZE=512M
-VG_NAME=lwvg
-LV_NAME=lwdata
-MOUNTPOINT=/mnt/linux-world-lvm
-APPLY=false
-

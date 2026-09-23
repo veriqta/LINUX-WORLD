@@ -1,5 +1,0 @@
-PROJECT_NAME=linux-world-packages
-OUTPUT_DIR=/tmp/linux-world-package-report
-ASSESS_UPDATES=true
-APPLY_UPDATES=false
-

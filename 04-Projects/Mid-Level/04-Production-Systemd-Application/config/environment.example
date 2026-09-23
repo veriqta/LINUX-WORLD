@@ -1,6 +1,0 @@
-PROJECT_NAME=linux-world-mid-app
-UNIT_PREFIX=linux-world-mid
-APP_DIR=/opt/linux-world-mid
-APP_USER=lwmid
-PORT=18200
-

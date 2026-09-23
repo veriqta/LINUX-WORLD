@@ -1,6 +1,0 @@
-2026-09-22T10:00:00Z INFO request completed 200
-2026-09-22T10:00:01Z WARN request slow 200
-2026-09-22T10:00:02Z ERROR upstream timeout 504
-2026-09-22T10:00:03Z INFO request completed 200
-2026-09-22T10:00:04Z ERROR upstream timeout 504
-

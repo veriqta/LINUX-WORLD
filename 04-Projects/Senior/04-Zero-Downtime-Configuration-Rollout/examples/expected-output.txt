@@ -1,7 +1,0 @@
-Representative result:
-
-PASS: objectives and integrity verified
-PASS: bounded failure detected and recovered
-
-Record real scale, workload, versions, SLOs, RPO, RTO, timings, and limitations.
-

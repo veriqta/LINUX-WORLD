@@ -1,9 +1,0 @@
-# Replace with the application's validated configuration format.
-[service]
-listen_address = 127.0.0.1
-listen_port = 8080
-log_level = info
-
-[limits]
-request_timeout_seconds = 10
-maximum_concurrent_requests = 50

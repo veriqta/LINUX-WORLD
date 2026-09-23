@@ -1,6 +1,0 @@
-PROJECT_NAME=linux-world-capacity
-MONITOR_PATH=/tmp
-WARN_PERCENT=70
-CRIT_PERCENT=90
-REPORT_DIR=/tmp/linux-world-capacity-report
-

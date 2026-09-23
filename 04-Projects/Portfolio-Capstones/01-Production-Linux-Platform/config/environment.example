@@ -1,7 +1,0 @@
-PROJECT_SLUG=production-linux-platform
-STATE_DIR=/tmp/lw-capstone-platform
-RELEASE_VERSION=1.0.0
-SITES=primary
-RPO_SECONDS=300
-RTO_SECONDS=180
-

@@ -1,7 +1,0 @@
-{
-  "project": "08-Hardened-SSH-Server",
-  "status": "PASS",
-  "environment": "disposable-lab",
-  "evidence_sanitized": true
-}
-

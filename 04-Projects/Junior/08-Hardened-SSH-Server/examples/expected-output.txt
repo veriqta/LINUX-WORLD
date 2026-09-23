@@ -1,7 +1,0 @@
-Representative output only. Values vary by distribution and host.
-
-PASS: project verification completed
-exit_status=0
-
-Failures must include a useful message and nonzero exit status.
-

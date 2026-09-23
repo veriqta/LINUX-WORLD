@@ -1,4 +1,0 @@
-host-a
-host-b
-host-c
-

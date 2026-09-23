@@ -1,5 +1,0 @@
-PROJECT_NAME=linux-world-evidence
-OUTPUT_DIR=/tmp/linux-world-evidence
-COLLECT_JOURNAL=false
-MAX_SECONDS=10
-

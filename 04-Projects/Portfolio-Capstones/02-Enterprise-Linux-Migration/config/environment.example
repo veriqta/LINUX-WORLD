@@ -1,7 +1,0 @@
-PROJECT_SLUG=enterprise-linux-migration
-STATE_DIR=/tmp/lw-capstone-migration
-RELEASE_VERSION=2.0.0
-SITES=legacy,target
-RPO_SECONDS=300
-RTO_SECONDS=300
-

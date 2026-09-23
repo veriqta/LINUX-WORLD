@@ -1,4 +1,0 @@
-PROJECT_SLUG=config-rollout
-STATE_DIR=/tmp/lw-senior-rollout
-DESIRED_VERSION=2.0.0
-

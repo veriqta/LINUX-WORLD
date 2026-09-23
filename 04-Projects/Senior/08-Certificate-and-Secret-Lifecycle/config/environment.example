@@ -1,4 +1,0 @@
-PROJECT_SLUG=credential-lifecycle
-STATE_DIR=/tmp/lw-senior-credentials
-DESIRED_VERSION=1.0.0
-

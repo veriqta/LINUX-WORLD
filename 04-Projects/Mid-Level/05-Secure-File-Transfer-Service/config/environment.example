@@ -1,6 +1,0 @@
-PROJECT_NAME=linux-world-sftp
-SFTP_GROUP=lwsftp
-SFTP_USER=lwtransfer
-SFTP_ROOT=/srv/linux-world-sftp
-PUBLIC_KEY_FILE=config/lab_key.pub
-

@@ -1,9 +1,0 @@
-config/environment.conf
-evidence/private/
-*.key
-*.pem
-*.p12
-*.secret
-*.token
-*.log
-.env

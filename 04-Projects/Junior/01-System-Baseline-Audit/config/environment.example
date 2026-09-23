@@ -1,4 +1,0 @@
-PROJECT_NAME=linux-world-baseline
-OUTPUT_DIR=/tmp/linux-world-baseline
-REDACT_NETWORK=true
-

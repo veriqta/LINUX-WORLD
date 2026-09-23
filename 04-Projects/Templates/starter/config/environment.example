@@ -1,9 +1,0 @@
-# Copy to environment.conf. Never commit the local copy.
-PROJECT_NAME=replace-me
-PROJECT_ROOT=/opt/replace-me
-PROJECT_USER=replace-me
-PROJECT_GROUP=replace-me
-LISTEN_ADDRESS=127.0.0.1
-LISTEN_PORT=8080
-LOG_LEVEL=info
-# Secrets do not belong here. Document a secure injection method.

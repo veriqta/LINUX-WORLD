@@ -1,8 +1,0 @@
-Representative output only. Exact values depend on the environment.
-
-PASS preflight: supported operating system detected
-PASS configuration: syntax validation succeeded
-PASS service: expected process is active
-PASS endpoint: primary workflow succeeded
-PASS security: prohibited action was denied
-PASS cleanup: project resources are absent

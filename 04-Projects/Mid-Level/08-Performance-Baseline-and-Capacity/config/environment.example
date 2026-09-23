@@ -1,5 +1,0 @@
-PROJECT_NAME=linux-world-performance
-OUTPUT_DIR=/tmp/linux-world-performance
-DURATION_SECONDS=5
-SAMPLE_INTERVAL=1
-
