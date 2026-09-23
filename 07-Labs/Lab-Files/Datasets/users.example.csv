@@ -1,0 +1,5 @@
+username,department,access_level,expires
+amira,operations,standard,2027-01-31
+ben,platform,privileged,2026-12-15
+chidi,security,readonly,2027-02-28
+daria,operations,standard,2027-03-31

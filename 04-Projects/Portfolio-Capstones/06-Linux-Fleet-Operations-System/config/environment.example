@@ -1,0 +1,7 @@
+PROJECT_SLUG=linux-fleet-operations
+STATE_DIR=/tmp/lw-capstone-fleet
+RELEASE_VERSION=1.0.0
+SITES=control,fleet-a,fleet-b
+RPO_SECONDS=300
+RTO_SECONDS=180
+

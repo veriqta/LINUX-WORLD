@@ -1,0 +1,4 @@
+PROJECT_SLUG=disaster-recovery
+STATE_DIR=/tmp/lw-senior-dr
+DESIRED_VERSION=1.0.0
+

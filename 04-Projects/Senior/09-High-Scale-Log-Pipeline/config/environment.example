@@ -1,0 +1,4 @@
+PROJECT_SLUG=log-pipeline
+STATE_DIR=/tmp/lw-senior-logs
+DESIRED_VERSION=1.0.0
+

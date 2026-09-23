@@ -1,0 +1,8 @@
+Representative output:
+
+PASS: functional state verified
+PASS: controlled failure detected
+PASS: recovery verified
+
+Record actual output, timestamps, versions, and recovery duration.
+

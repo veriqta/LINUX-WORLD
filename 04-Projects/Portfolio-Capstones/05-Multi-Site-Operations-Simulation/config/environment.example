@@ -1,0 +1,7 @@
+PROJECT_SLUG=multi-site-operations
+STATE_DIR=/tmp/lw-capstone-multisite
+RELEASE_VERSION=1.0.0
+SITES=site-a,site-b
+RPO_SECONDS=120
+RTO_SECONDS=120
+

@@ -1,0 +1,6 @@
+PROJECT_NAME=linux-world-backup
+SOURCE_DIR=/tmp/linux-world-backup-source
+BACKUP_DIR=/tmp/linux-world-backups
+RESTORE_DIR=/tmp/linux-world-restore
+RETENTION_DAYS=7
+

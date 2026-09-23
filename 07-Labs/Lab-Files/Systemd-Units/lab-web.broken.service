@@ -1,0 +1,9 @@
+[Unit]
+Description=Deliberately invalid Linux World lab unit
+
+[Service]
+Type=simple
+ExecStart=/path/that/does/not/exist
+Restart=on-failure
+
+# This fixture must never be installed outside an isolated lab.

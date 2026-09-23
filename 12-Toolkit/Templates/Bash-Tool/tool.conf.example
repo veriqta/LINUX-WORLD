@@ -1,0 +1,3 @@
+# Copy only reviewed keys into a local configuration file.
+OUTPUT_FORMAT=human
+TIMEOUT_SECONDS=30

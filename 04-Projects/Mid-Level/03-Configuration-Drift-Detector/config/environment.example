@@ -1,0 +1,4 @@
+PROJECT_NAME=linux-world-drift
+TARGET_DIR=/tmp/linux-world-drift-target
+STATE_DIR=/tmp/linux-world-drift-state
+

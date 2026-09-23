@@ -1,0 +1,6 @@
+PROJECT_NAME=linux-world-proxy
+BACKEND_ONE_PORT=18101
+BACKEND_TWO_PORT=18102
+PROXY_PORT=18100
+STATE_DIR=/tmp/linux-world-proxy
+

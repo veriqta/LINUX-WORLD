@@ -1,0 +1,5 @@
+PROJECT_NAME=linux-world-log-analyzer
+INPUT_FILE=examples/sample.log
+OUTPUT_DIR=/tmp/linux-world-log-report
+TOP_COUNT=5
+

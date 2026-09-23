@@ -1,0 +1,7 @@
+PROJECT_SLUG=secure-hosting-platform
+STATE_DIR=/tmp/lw-capstone-hosting
+RELEASE_VERSION=1.0.0
+SITES=tenant-red,tenant-blue
+RPO_SECONDS=300
+RTO_SECONDS=180
+

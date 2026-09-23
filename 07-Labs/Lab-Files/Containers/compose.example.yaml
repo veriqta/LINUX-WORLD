@@ -1,0 +1,13 @@
+services:
+  lab-node:
+    image: ubuntu:24.04
+    command: ["sleep", "infinity"]
+    init: true
+    networks: [labnet]
+    volumes:
+      - labdata:/lab
+networks:
+  labnet:
+    internal: true
+volumes:
+  labdata: {}

@@ -1,0 +1,11 @@
+server:
+    interface: __ADDR__@__PORT__
+    access-control: __NET__ allow
+    hide-identity: yes
+    hide-version: yes
+    qname-minimisation: yes
+
+forward-zone:
+    name: "."
+    forward-addr: __UPSTREAM__
+
