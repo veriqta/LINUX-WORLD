@@ -1,0 +1,3518 @@
+## Portfolio Project 01: Linux User & Access Management System
+
+**Level:** Junior
+**Primary environment:** Ubuntu Server 24.04 LTS
+**Estimated time:** 6 to 10 hours
+**Cost:** Free with a local VM
+**Primary skills:** Linux administration, users, groups, permissions, sudo, SSH, Bash, auditing, troubleshooting
+
+---
+
+## 01. Project Title
+
+### Linux User & Access Management System
+
+In this project, you will build a small but realistic Linux identity and access management environment.
+
+You will not simply practice `useradd`, `chmod`, and `chown`.
+
+You will design an access model, implement it, deliberately test what users can and cannot do, introduce permission failures, troubleshoot them, automate repetitive administration, audit the environment, and document the completed system as a portfolio project.
+
+By the end, you should understand the relationship between:
+
+```text
+User
+  |
+  +-- Primary Group
+  |
+  +-- Supplementary Groups
+  |
+  +-- File Ownership
+  |
+  +-- Directory Permissions
+  |
+  +-- sudo Authorization
+  |
+  +-- SSH Authentication
+  |
+  +-- Account State
+  |
+  +-- Audit Evidence
+```
+
+---
+
+# 02. Project Scenario
+
+You have joined a small technology company as a junior Linux administrator.
+
+The company uses an Ubuntu Linux server for internal work.
+
+Three teams need access:
+
+```text
+Development
+Operations
+Audit
+```
+
+The current server has several problems:
+
+* Accounts have been created without a consistent standard.
+* Employees have access to directories they do not need.
+* Shared files sometimes become inaccessible to other team members.
+* Too many people have broad administrative access.
+* There is no clear process for creating or disabling accounts.
+* SSH access is not standardized.
+* Administrators struggle to determine which groups a user belongs to.
+* Access changes are poorly documented.
+* There is no simple access audit.
+
+You have been asked to create a controlled access-management environment.
+
+---
+
+# 03. Project Difficulty
+
+**Junior**
+
+This project is designed for someone who understands basic terminal navigation but has never built a complete Linux administration project.
+
+You will learn how Linux access control works rather than memorizing isolated commands.
+
+This project establishes foundations required by later Linux World projects.
+
+---
+
+# 04. Estimated Time
+
+Allow approximately:
+
+```text
+Environment preparation       30-60 minutes
+Users and groups              60 minutes
+Permissions                   60-90 minutes
+Shared directories            45-60 minutes
+sudo administration           45 minutes
+SSH                           45-60 minutes
+Automation                    60-90 minutes
+Testing                       60 minutes
+Failure labs                  60 minutes
+Documentation                 60+ minutes
+```
+
+Do not rush.
+
+The purpose is to understand what happens at each stage.
+
+---
+
+# 05. Prerequisites
+
+You should understand basic commands such as:
+
+```bash
+pwd
+ls
+cd
+mkdir
+cat
+cp
+mv
+```
+
+You do not need previous experience managing Linux users.
+
+You should have access to a Linux environment where you can use `sudo`.
+
+---
+
+# 06. Learning Objectives
+
+By completing this project, you will learn to:
+
+1. Explain Linux users and groups.
+2. Inspect `/etc/passwd`, `/etc/group`, and `/etc/shadow` safely.
+3. Create and modify Linux users.
+4. Create administrative groups.
+5. Add users to supplementary groups.
+6. Understand UID and GID values.
+7. Manage account passwords.
+8. Lock and unlock accounts.
+9. configure account expiration.
+10. Understand Linux file ownership.
+11. Work with read, write, and execute permissions.
+12. Use symbolic and numeric permission notation.
+13. Configure shared team directories.
+14. Understand the setgid directory bit.
+15. Understand `umask`.
+16. Delegate administrative privileges using sudo.
+17. Validate sudo configuration safely.
+18. Configure SSH keys in a lab.
+19. Apply correct `.ssh` permissions.
+20. Build a Bash access-audit script.
+21. Test authorization from different accounts.
+22. Diagnose permission failures.
+23. Audit account configuration.
+24. Document access decisions.
+25. Clean up accounts safely.
+26. Present the project on GitHub.
+27. Explain the project during an interview.
+
+---
+
+# 07. What You Will Build
+
+You will create three organizational groups:
+
+```text
+developers
+operations
+auditors
+```
+
+You will create these lab users:
+
+```text
+alice
+bob
+carol
+david
+erin
+```
+
+The intended model is:
+
+```text
+alice  -> developers
+bob    -> developers
+carol  -> operations
+david  -> operations
+erin   -> auditors
+```
+
+We will also grant limited administrative privileges to the Operations team.
+
+The server will contain shared directories:
+
+```text
+/srv/veriqta/
+/srv/veriqta/development/
+/srv/veriqta/operations/
+/srv/veriqta/audit/
+```
+
+The goal is not merely:
+
+```text
+Can Alice open a file?
+```
+
+The better question is:
+
+```text
+Should Alice be able to open this file?
+
+If yes:
+Why?
+
+If no:
+Which Linux control prevents it?
+```
+
+That distinction is central to access management.
+
+---
+
+# 08. Architecture
+
+Our lab will look approximately like this:
+
+```text
+                    Ubuntu Server
+                         |
+             +-----------+-----------+
+             |           |           |
+        developers   operations   auditors
+             |           |           |
+        alice,bob    carol,david     erin
+             |           |           |
+             v           v           v
+      development/  operations/    audit/
+             |
+             +---------- Access Controls
+                         |
+                 ownership + groups
+                         |
+                    permissions
+                         |
+                       sudo
+                         |
+                   SSH security
+                         |
+                    audit script
+```
+
+The Linux kernel ultimately evaluates credentials and permissions when processes attempt to access resources.
+
+Users do not directly "have permissions" in isolation. Access depends on factors including the process credentials, resource ownership, applicable permission mechanisms, and the operation being attempted.
+
+---
+
+# 09. Technologies
+
+You will use:
+
+```text
+Ubuntu Server 24.04 LTS
+Linux users and groups
+POSIX-style file permissions
+sudo
+OpenSSH
+Bash
+system utilities
+systemd
+journalctl
+```
+
+No cloud account is required.
+
+---
+
+# 10. Environment Setup
+
+## 10.1 Recommended VM
+
+Recommended minimum:
+
+```text
+OS: Ubuntu Server 24.04 LTS
+CPU: 2 virtual CPUs
+RAM: 2 GB
+Disk: 20 GB
+Architecture: x86_64 or ARM64 where supported
+Network: NAT is sufficient
+```
+
+VirtualBox, VMware, or another Linux VM platform is suitable.
+
+WSL can be useful for portions of the project, but a full Ubuntu VM is preferred because service and SSH behavior more closely resembles a standalone Linux server.
+
+Never perform account experiments on an important production machine.
+
+---
+
+## 10.2 Confirm your operating system
+
+Run:
+
+```bash
+cat /etc/os-release
+```
+
+Look for something similar to:
+
+```text
+NAME="Ubuntu"
+VERSION="24.04..."
+```
+
+Your exact output may differ.
+
+---
+
+## 10.3 Confirm your architecture
+
+Run:
+
+```bash
+uname -m
+```
+
+Typical output:
+
+```text
+x86_64
+```
+
+ARM systems may show something such as:
+
+```text
+aarch64
+```
+
+---
+
+## 10.4 Identify yourself
+
+Run:
+
+```bash
+whoami
+```
+
+Then:
+
+```bash
+id
+```
+
+`whoami` displays your current username.
+
+`id` provides more information, including your numeric user ID and group memberships.
+
+Representative output:
+
+```text
+uid=1000(student) gid=1000(student) groups=1000(student),27(sudo)
+```
+
+Your values will differ.
+
+---
+
+## 10.5 Verify sudo access
+
+Run:
+
+```bash
+sudo -v
+```
+
+Enter your password if prompted.
+
+Then:
+
+```bash
+sudo whoami
+```
+
+Expected output:
+
+```text
+root
+```
+
+This does not mean your normal shell has become root.
+
+Only the command after `sudo` was executed with elevated privileges.
+
+---
+
+## 10.6 Update package metadata
+
+Run:
+
+```bash
+sudo apt update
+```
+
+This refreshes the package metadata used by APT.
+
+We are not blindly upgrading the entire machine because that is not required for the lesson.
+
+---
+
+## 10.7 Install required packages
+
+Run:
+
+```bash
+sudo apt install openssh-server tree acl -y
+```
+
+We will primarily use standard Unix permission controls, but installing `acl` also gives us useful inspection utilities and creates room for later comparison with ACL-based authorization.
+
+Verify SSH:
+
+```bash
+systemctl status ssh --no-pager
+```
+
+If it is not running:
+
+```bash
+sudo systemctl enable --now ssh
+```
+
+Verify again:
+
+```bash
+systemctl is-active ssh
+```
+
+Expected result:
+
+```text
+active
+```
+
+---
+
+# 11. Project Directory Structure
+
+Your portfolio files should not be mixed with operating-system configuration.
+
+Create your project in your home directory.
+
+Run:
+
+```bash
+mkdir -p ~/linux-user-access-management/{docs,scripts,tests,screenshots,evidence}
+```
+
+Move into it:
+
+```bash
+cd ~/linux-user-access-management
+```
+
+Create starter files:
+
+```bash
+touch README.md
+touch docs/access-model.md
+touch docs/security.md
+touch docs/troubleshooting.md
+touch docs/cleanup.md
+touch tests/test-access.sh
+```
+
+Check the structure:
+
+```bash
+tree
+```
+
+You should see something similar to:
+
+```text
+.
+├── README.md
+├── docs
+│   ├── access-model.md
+│   ├── cleanup.md
+│   ├── security.md
+│   └── troubleshooting.md
+├── evidence
+├── screenshots
+├── scripts
+└── tests
+    └── test-access.sh
+```
+
+### What did we just do?
+
+We separated:
+
+```text
+Operating-system configuration
+```
+
+from:
+
+```text
+Portfolio evidence
+```
+
+This becomes important during cleanup.
+
+You may remove the lab accounts without deleting your scripts, documentation, and screenshots.
+
+---
+
+# 12. Step-by-Step Implementation
+
+# Phase 1: Understand Linux Identity
+
+Before creating users, inspect how Linux represents them.
+
+## Step 1: Inspect `/etc/passwd`
+
+Run:
+
+```bash
+head /etc/passwd
+```
+
+A line generally follows this structure:
+
+```text
+username:x:UID:GID:comment:home:shell
+```
+
+For example:
+
+```text
+student:x:1000:1000:Student:/home/student:/bin/bash
+```
+
+Fields are separated by colons.
+
+They represent:
+
+```text
+student       username
+x             password information stored elsewhere
+1000          UID
+1000          primary GID
+Student       descriptive field
+/home/student home directory
+/bin/bash     login shell
+```
+
+The actual password hash is not stored directly in `/etc/passwd`.
+
+---
+
+## Step 2: Understand `/etc/shadow`
+
+Do not print password hashes unnecessarily.
+
+Instead, inspect metadata for your own account through supported tools:
+
+```bash
+sudo chage -l "$USER"
+```
+
+This displays password-aging information.
+
+The protected `/etc/shadow` database contains authentication-related information and is normally readable only by privileged processes/users.
+
+Verify its permissions:
+
+```bash
+ls -l /etc/shadow
+```
+
+The exact group and mode can vary, but ordinary users should not have unrestricted read access.
+
+---
+
+## Step 3: Inspect groups
+
+Run:
+
+```bash
+head /etc/group
+```
+
+A group entry resembles:
+
+```text
+group-name:x:GID:members
+```
+
+Check your groups:
+
+```bash
+groups
+```
+
+Then:
+
+```bash
+id
+```
+
+---
+
+# Phase 2: Design the Access Model
+
+Do not create accounts until you know what access they require.
+
+Our design is:
+
+| User  | Team        | Primary role | Admin privilege |
+| ----- | ----------- | ------------ | --------------- |
+| Alice | Development | Developer    | No              |
+| Bob   | Development | Developer    | No              |
+| Carol | Operations  | Operator     | Limited         |
+| David | Operations  | Operator     | Limited         |
+| Erin  | Audit       | Auditor      | No              |
+
+The group model will be:
+
+```text
+developers
+operations
+auditors
+```
+
+Why groups?
+
+Imagine 50 developers.
+
+Managing permissions separately for every employee becomes difficult.
+
+Instead:
+
+```text
+resource
+   |
+developers group
+   |
+all authorized developers
+```
+
+When someone joins:
+
+```text
+add user -> developers
+```
+
+When someone leaves:
+
+```text
+remove user -> developers
+```
+
+This is easier to audit.
+
+---
+
+# Phase 3: Create Groups
+
+## Step 1: Confirm groups do not already exist
+
+Run:
+
+```bash
+getent group developers
+getent group operations
+getent group auditors
+```
+
+If nothing is returned, those group names are currently unused in the configured name-service sources.
+
+If a group already exists on your machine, use different lab-specific names rather than overwriting a real group.
+
+---
+
+## Step 2: Create the groups
+
+Run:
+
+```bash
+sudo groupadd developers
+sudo groupadd operations
+sudo groupadd auditors
+```
+
+---
+
+## Step 3: Verify
+
+Run:
+
+```bash
+getent group developers
+getent group operations
+getent group auditors
+```
+
+Representative output:
+
+```text
+developers:x:1001:
+operations:x:1002:
+auditors:x:1003:
+```
+
+Your GIDs may differ.
+
+Do not hard-code these numbers into scripts unless there is a specific reason.
+
+---
+
+# Phase 4: Create Users
+
+Ubuntu provides `adduser`, which is convenient for interactive local account creation.
+
+For reproducibility in this lab, we will use `useradd` and explicitly choose important options.
+
+## Step 1: Create Alice
+
+Run:
+
+```bash
+sudo useradd -m -s /bin/bash -c "Alice Developer" alice
+```
+
+Breakdown:
+
+```text
+sudo           execute with administrative privileges
+useradd        create an account
+-m             create the home directory
+-s /bin/bash   set Bash as the login shell
+-c             set descriptive information
+alice          username
+```
+
+---
+
+## Step 2: Set Alice's temporary lab password
+
+Run:
+
+```bash
+sudo passwd alice
+```
+
+Enter a temporary password when prompted.
+
+Do not reuse a real password.
+
+The password will not appear on screen while you type.
+
+That is normal.
+
+---
+
+## Step 3: Verify Alice
+
+Run:
+
+```bash
+id alice
+```
+
+Then:
+
+```bash
+getent passwd alice
+```
+
+Then:
+
+```bash
+ls -ld /home/alice
+```
+
+Do not continue until all three confirm the account exists as expected.
+
+---
+
+## Step 4: Create the remaining users
+
+Run:
+
+```bash
+sudo useradd -m -s /bin/bash -c "Bob Developer" bob
+sudo useradd -m -s /bin/bash -c "Carol Operations" carol
+sudo useradd -m -s /bin/bash -c "David Operations" david
+sudo useradd -m -s /bin/bash -c "Erin Auditor" erin
+```
+
+Set a temporary lab password for each:
+
+```bash
+sudo passwd bob
+sudo passwd carol
+sudo passwd david
+sudo passwd erin
+```
+
+Never put plaintext passwords into your GitHub repository.
+
+---
+
+## Step 5: Verify all users
+
+Run:
+
+```bash
+for user in alice bob carol david erin; do
+    id "$user"
+done
+```
+
+You should receive one identity record per user.
+
+---
+
+# Phase 5: Assign Team Membership
+
+## Step 1: Add developers
+
+Run:
+
+```bash
+sudo usermod -aG developers alice
+sudo usermod -aG developers bob
+```
+
+The important option is:
+
+```text
+-aG
+```
+
+`-G` defines supplementary groups.
+
+`-a` means append.
+
+### Important mistake to avoid
+
+Running something like:
+
+```bash
+sudo usermod -G developers alice
+```
+
+without `-a` can replace Alice's existing supplementary-group list.
+
+That can unintentionally remove other memberships.
+
+---
+
+## Step 2: Add Operations users
+
+Run:
+
+```bash
+sudo usermod -aG operations carol
+sudo usermod -aG operations david
+```
+
+---
+
+## Step 3: Add auditor
+
+Run:
+
+```bash
+sudo usermod -aG auditors erin
+```
+
+---
+
+## Step 4: Verify
+
+Run:
+
+```bash
+id alice
+id bob
+id carol
+id david
+id erin
+```
+
+You should see the appropriate supplementary team group.
+
+You can also run:
+
+```bash
+getent group developers
+getent group operations
+getent group auditors
+```
+
+---
+
+# Phase 6: Create Shared Resources
+
+We will place organization-level data beneath `/srv`.
+
+## Step 1: Create the directory tree
+
+Run:
+
+```bash
+sudo mkdir -p /srv/veriqta/{development,operations,audit}
+```
+
+Verify:
+
+```bash
+tree -d /srv/veriqta
+```
+
+Representative structure:
+
+```text
+/srv/veriqta
+├── audit
+├── development
+└── operations
+```
+
+---
+
+# 13. Configuration
+
+# Phase 7: Configure Ownership
+
+## Step 1: Development directory
+
+Run:
+
+```bash
+sudo chown root:developers /srv/veriqta/development
+```
+
+This means:
+
+```text
+owner = root
+group = developers
+```
+
+---
+
+## Step 2: Operations directory
+
+Run:
+
+```bash
+sudo chown root:operations /srv/veriqta/operations
+```
+
+---
+
+## Step 3: Audit directory
+
+Run:
+
+```bash
+sudo chown root:auditors /srv/veriqta/audit
+```
+
+---
+
+## Step 4: Verify ownership
+
+Run:
+
+```bash
+ls -ld /srv/veriqta/*
+```
+
+You should see each directory associated with its intended team group.
+
+---
+
+# Phase 8: Understand Permissions Before Changing Them
+
+Run:
+
+```bash
+ls -ld /srv/veriqta/development
+```
+
+Permissions may look similar to:
+
+```text
+drwxr-xr-x
+```
+
+Break it apart:
+
+```text
+d | rwx | r-x | r-x
+    user  group other
+```
+
+For a directory:
+
+```text
+r = list directory names
+w = create/delete directory entries, subject to directory semantics
+x = traverse/access entries through the directory
+```
+
+Numeric permissions use:
+
+```text
+r = 4
+w = 2
+x = 1
+```
+
+Therefore:
+
+```text
+7 = rwx
+6 = rw-
+5 = r-x
+4 = r--
+0 = ---
+```
+
+---
+
+# Phase 9: Secure Team Directories
+
+We want the owning group to collaborate.
+
+We do not want unrelated users casually entering team directories.
+
+Run:
+
+```bash
+sudo chmod 2770 /srv/veriqta/development
+sudo chmod 2770 /srv/veriqta/operations
+sudo chmod 2750 /srv/veriqta/audit
+```
+
+Why four digits?
+
+Consider:
+
+```text
+2770
+```
+
+The leading `2` enables the setgid bit on the directory.
+
+The remaining:
+
+```text
+770
+```
+
+means:
+
+```text
+owner = rwx
+group = rwx
+other = ---
+```
+
+For audit:
+
+```text
+2750
+```
+
+means:
+
+```text
+setgid
+owner = rwx
+group = r-x
+other = ---
+```
+
+This gives auditors read/traverse access without ordinary group write permission.
+
+---
+
+## Verify
+
+Run:
+
+```bash
+ls -ld /srv/veriqta/*
+```
+
+You should notice an `s` in the group execute position for the directories.
+
+For example:
+
+```text
+drwxrws---
+```
+
+---
+
+# Why Setgid Matters
+
+Without careful shared-directory design, files created by different users can receive ownership or permissions that make collaboration awkward.
+
+A setgid directory causes newly created files and subdirectories to inherit the directory's group ownership.
+
+Let's prove it.
+
+Run a command as Alice:
+
+```bash
+sudo -u alice touch /srv/veriqta/development/alice-test.txt
+```
+
+Inspect it:
+
+```bash
+ls -l /srv/veriqta/development/alice-test.txt
+```
+
+The group should be:
+
+```text
+developers
+```
+
+rather than simply Alice's primary group.
+
+That is the important behavior.
+
+---
+
+# Phase 10: Understand `umask`
+
+Group ownership alone does not guarantee group write access.
+
+Check Alice's effective `umask`:
+
+```bash
+sudo -iu alice bash -c 'umask'
+```
+
+A common value is:
+
+```text
+0022
+```
+
+If a regular file starts from a base mode such as `666`, a `0022` umask normally removes group and other write bits, producing:
+
+```text
+644
+```
+
+That means a new shared file may become:
+
+```text
+rw-r--r--
+```
+
+The group can read it but cannot modify it.
+
+This is an important difference between:
+
+```text
+group ownership
+```
+
+and:
+
+```text
+group permissions
+```
+
+---
+
+# Phase 11: Test Development Collaboration
+
+Create a file as Alice:
+
+```bash
+sudo -u alice bash -c 'echo "Development notes" > /srv/veriqta/development/project.txt'
+```
+
+Inspect:
+
+```bash
+ls -l /srv/veriqta/development/project.txt
+```
+
+Now attempt to append as Bob:
+
+```bash
+sudo -u bob bash -c 'echo "Bob update" >> /srv/veriqta/development/project.txt'
+```
+
+Depending on the resulting file mode, this may fail with:
+
+```text
+Permission denied
+```
+
+That is useful.
+
+We have discovered a real collaboration problem.
+
+---
+
+# Phase 12: Correct the Shared File Model
+
+For this lab, set the existing shared file to group writable:
+
+```bash
+sudo chmod 660 /srv/veriqta/development/project.txt
+```
+
+Verify:
+
+```bash
+ls -l /srv/veriqta/development/project.txt
+```
+
+Now retry:
+
+```bash
+sudo -u bob bash -c 'echo "Bob update" >> /srv/veriqta/development/project.txt'
+```
+
+Read the file:
+
+```bash
+cat /srv/veriqta/development/project.txt
+```
+
+You should now see both entries.
+
+### What did we learn?
+
+The setgid bit solved group inheritance.
+
+It did not automatically make every file group writable.
+
+Shared environments require both ownership and permission design.
+
+For a larger environment, you might use a carefully managed collaborative `umask`, default ACLs, application-specific access controls, or another policy appropriate to the workload.
+
+---
+
+# Phase 13: Test Unauthorized Access
+
+Alice belongs to Development.
+
+She should not be able to enter Operations.
+
+Test:
+
+```bash
+sudo -u alice ls /srv/veriqta/operations
+```
+
+Expected:
+
+```text
+Permission denied
+```
+
+Now test Carol:
+
+```bash
+sudo -u carol ls /srv/veriqta/operations
+```
+
+That should succeed.
+
+Test Erin against Development:
+
+```bash
+sudo -u erin ls /srv/veriqta/development
+```
+
+This should fail.
+
+### Important principle
+
+A failed authorization test can be a successful security test.
+
+The expected result is sometimes:
+
+```text
+Access denied
+```
+
+---
+
+# 14. Automation
+
+Manual account inspection becomes tedious as environments grow.
+
+We will build a simple audit tool.
+
+# Phase 14: Create the Access Audit Script
+
+Return to your project:
+
+```bash
+cd ~/linux-user-access-management
+```
+
+Create:
+
+```bash
+nano scripts/access-audit.sh
+```
+
+Add:
+
+```bash
+#!/usr/bin/env bash
+
+set -u
+
+USERS=("alice" "bob" "carol" "david" "erin")
+GROUPS=("developers" "operations" "auditors")
+DIRECTORIES=(
+    "/srv/veriqta/development"
+    "/srv/veriqta/operations"
+    "/srv/veriqta/audit"
+)
+
+echo "=========================================="
+echo " Linux User & Access Management Audit"
+echo "=========================================="
+echo
+echo "Date: $(date)"
+echo "Host: $(hostname)"
+echo
+
+echo "---- USER AUDIT ----"
+
+for user in "${USERS[@]}"; do
+    if id "$user" >/dev/null 2>&1; then
+        echo
+        echo "[FOUND] $user"
+        id "$user"
+        passwd -S "$user" 2>/dev/null || true
+    else
+        echo
+        echo "[MISSING] $user"
+    fi
+done
+
+echo
+echo "---- GROUP AUDIT ----"
+
+for group in "${GROUPS[@]}"; do
+    if getent group "$group" >/dev/null; then
+        echo
+        getent group "$group"
+    else
+        echo "[MISSING] $group"
+    fi
+done
+
+echo
+echo "---- DIRECTORY AUDIT ----"
+
+for directory in "${DIRECTORIES[@]}"; do
+    if [[ -d "$directory" ]]; then
+        stat -c '%A %a %U %G %n' "$directory"
+    else
+        echo "[MISSING] $directory"
+    fi
+done
+
+echo
+echo "---- SUDO AUDIT ----"
+
+for user in "${USERS[@]}"; do
+    echo
+    echo "Privileges for $user:"
+    sudo -n -l -U "$user" 2>/dev/null || echo "Unable to query or no sudo privileges found."
+done
+
+echo
+echo "Audit complete."
+```
+
+Save the file.
+
+---
+
+## Make it executable
+
+Run:
+
+```bash
+chmod +x scripts/access-audit.sh
+```
+
+Verify:
+
+```bash
+ls -l scripts/access-audit.sh
+```
+
+Look for executable bits:
+
+```text
+-rwx...
+```
+
+---
+
+## Run it
+
+Run:
+
+```bash
+sudo ./scripts/access-audit.sh
+```
+
+Do not simply look for the words "Audit complete."
+
+Read the output.
+
+Ask:
+
+```text
+Do all expected users exist?
+Do all groups exist?
+Are memberships correct?
+Are directory owners correct?
+Are directory groups correct?
+Are modes correct?
+Who has sudo privileges?
+```
+
+That is what turns a script into an operational tool.
+
+---
+
+# 15. Security
+
+# Phase 15: Delegate Administrative Access
+
+Giving everyone unrestricted root access would defeat our access model.
+
+Development users do not need administrative privileges for this lab.
+
+Operations users will receive a deliberately narrow sudo policy.
+
+We will allow them to inspect and restart the SSH service.
+
+This is only a lab example. Production sudo policy should be based on actual operational duties and reviewed carefully because command-level sudo delegation can have security implications.
+
+---
+
+## Step 1: Never casually edit `/etc/sudoers`
+
+A syntax error in sudo configuration can create serious administrative problems.
+
+Use:
+
+```bash
+visudo
+```
+
+or validate a drop-in before depending on it.
+
+We will create a dedicated file.
+
+Run:
+
+```bash
+sudo visudo -f /etc/sudoers.d/operations-lab
+```
+
+Add:
+
+```text
+%operations ALL=(root) /usr/bin/systemctl status ssh, /usr/bin/systemctl restart ssh
+```
+
+Save and exit.
+
+---
+
+## Step 2: Validate sudo configuration
+
+Run:
+
+```bash
+sudo visudo -cf /etc/sudoers
+```
+
+You should receive confirmation that the parsed files are valid.
+
+If you receive a syntax error, correct it before continuing.
+
+---
+
+## Step 3: Check Carol's permissions
+
+Run:
+
+```bash
+sudo -l -U carol
+```
+
+Look for the allowed commands.
+
+---
+
+## Step 4: Test an allowed command
+
+Run:
+
+```bash
+sudo -u carol sudo systemctl status ssh --no-pager
+```
+
+Depending on sudo authentication state and policy, testing via nested `sudo -u` can prompt or behave differently than a real login session. A cleaner interactive test is:
+
+```bash
+su - carol
+```
+
+Enter Carol's lab password.
+
+Then run:
+
+```bash
+sudo systemctl status ssh --no-pager
+```
+
+Exit afterward:
+
+```bash
+exit
+```
+
+---
+
+## Step 5: Test a forbidden administrative action
+
+Log in as Carol again:
+
+```bash
+su - carol
+```
+
+Try:
+
+```bash
+sudo useradd unauthorized-test
+```
+
+The operation should be denied by the sudo policy.
+
+Exit:
+
+```bash
+exit
+```
+
+Verify that the user was not created:
+
+```bash
+getent passwd unauthorized-test
+```
+
+No result should be returned.
+
+This proves that Carol has delegated privilege rather than unrestricted administration.
+
+---
+
+# Phase 16: Account Lifecycle Management
+
+Accounts do not exist forever.
+
+Administrators must know how to disable access without immediately destroying data.
+
+## Lock Bob
+
+Run:
+
+```bash
+sudo passwd -l bob
+```
+
+Check:
+
+```bash
+sudo passwd -S bob
+```
+
+You should see account password status indicating it is locked.
+
+### Important distinction
+
+Password locking is not identical to completely disabling every possible authentication mechanism. For example, SSH public-key authentication may require separate consideration.
+
+This is why account deprovisioning should be treated as a process, not one command.
+
+---
+
+## Unlock Bob
+
+Run:
+
+```bash
+sudo passwd -u bob
+```
+
+Verify:
+
+```bash
+sudo passwd -S bob
+```
+
+---
+
+## Inspect password aging
+
+Run:
+
+```bash
+sudo chage -l alice
+```
+
+You will see account/password-aging information.
+
+---
+
+## Configure a lab expiration date
+
+Rather than hard-code an old date that may already have passed, create a future test date:
+
+```bash
+TEST_EXPIRY=$(date -d '+30 days' +%F)
+echo "$TEST_EXPIRY"
+```
+
+Apply it:
+
+```bash
+sudo chage -E "$TEST_EXPIRY" alice
+```
+
+Verify:
+
+```bash
+sudo chage -l alice
+```
+
+For this project, remove the expiration again after demonstrating the feature:
+
+```bash
+sudo chage -E -1 alice
+```
+
+Verify:
+
+```bash
+sudo chage -l alice
+```
+
+---
+
+# Phase 17: SSH Access
+
+SSH allows remote administration.
+
+Before changing SSH settings, remember an important rule:
+
+**Never change remote authentication settings on an important server unless you have a tested recovery path.**
+
+This is a lab.
+
+---
+
+## Step 1: Check SSH
+
+Run:
+
+```bash
+systemctl is-active ssh
+```
+
+Expected:
+
+```text
+active
+```
+
+---
+
+## Step 2: Find the lab server IP
+
+Run:
+
+```bash
+hostname -I
+```
+
+Your address depends on your VM/network configuration.
+
+Do not copy an example IP from documentation.
+
+Use your actual lab address.
+
+---
+
+## Step 3: Generate a key
+
+For a realistic remote test, generate the key on the machine you will use as the SSH client, not on a production server.
+
+In a simple one-VM learning lab, you can demonstrate the mechanics locally.
+
+As Alice:
+
+```bash
+sudo -iu alice
+```
+
+Generate a lab key:
+
+```bash
+ssh-keygen -t ed25519 -C "alice-lab"
+```
+
+For a disposable lab, follow the prompts. In real environments, protect private keys appropriately and use a passphrase where the workflow permits it.
+
+Check:
+
+```bash
+ls -la ~/.ssh
+```
+
+You should see files including:
+
+```text
+id_ed25519
+id_ed25519.pub
+```
+
+The private key:
+
+```text
+id_ed25519
+```
+
+must never be uploaded to GitHub.
+
+---
+
+## Step 4: Inspect permissions
+
+Run:
+
+```bash
+stat -c '%A %a %n' ~/.ssh ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.pub
+```
+
+The private key should not be broadly readable.
+
+---
+
+## Step 5: Understand `authorized_keys`
+
+The SSH server uses:
+
+```text
+~/.ssh/authorized_keys
+```
+
+to determine which public keys may authenticate as a user when public-key authentication is enabled.
+
+For a local demonstration:
+
+```bash
+cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+Verify:
+
+```bash
+ls -ld ~/.ssh
+ls -l ~/.ssh/authorized_keys
+```
+
+Exit:
+
+```bash
+exit
+```
+
+### Production note
+
+Normally, the private key remains on the client device and only the public key is installed on the target server.
+
+---
+
+# Phase 18: Inspect SSH Configuration Safely
+
+Before editing SSH configuration, inspect the effective server configuration:
+
+```bash
+sudo sshd -T | grep -E '^(permitrootlogin|passwordauthentication|pubkeyauthentication)'
+```
+
+This is more reliable than assuming a single configuration file contains the final effective value, because modern OpenSSH installations may use included configuration snippets.
+
+Do not disable password authentication yet unless you have already confirmed working key-based access through a separate session.
+
+Before restarting SSH after any configuration change, validate syntax:
+
+```bash
+sudo sshd -t
+```
+
+No output normally means the syntax validation succeeded.
+
+---
+
+# 16. Testing
+
+Now we will prove that the access model works.
+
+Create some team data.
+
+Run:
+
+```bash
+sudo -u alice bash -c 'echo "development data" > /srv/veriqta/development/dev-data.txt'
+sudo chmod 660 /srv/veriqta/development/dev-data.txt
+```
+
+Create Operations data:
+
+```bash
+sudo -u carol bash -c 'echo "operations data" > /srv/veriqta/operations/ops-data.txt'
+sudo chmod 660 /srv/veriqta/operations/ops-data.txt
+```
+
+Create Audit data as root:
+
+```bash
+echo "audit evidence" | sudo tee /srv/veriqta/audit/audit-data.txt >/dev/null
+sudo chown root:auditors /srv/veriqta/audit/audit-data.txt
+sudo chmod 640 /srv/veriqta/audit/audit-data.txt
+```
+
+---
+
+## Functional Test 1: Alice reads Development
+
+Run:
+
+```bash
+sudo -u alice cat /srv/veriqta/development/dev-data.txt
+```
+
+Expected representative result:
+
+```text
+development data
+```
+
+PASS.
+
+---
+
+## Functional Test 2: Bob reads Development
+
+Run:
+
+```bash
+sudo -u bob cat /srv/veriqta/development/dev-data.txt
+```
+
+This should succeed because Bob belongs to `developers`.
+
+---
+
+## Security Test 1: Erin attempts Development
+
+Run:
+
+```bash
+sudo -u erin cat /srv/veriqta/development/dev-data.txt
+```
+
+Expected:
+
+```text
+Permission denied
+```
+
+PASS.
+
+The denial is the intended security result.
+
+---
+
+## Security Test 2: Alice attempts Operations
+
+Run:
+
+```bash
+sudo -u alice cat /srv/veriqta/operations/ops-data.txt
+```
+
+Expected:
+
+```text
+Permission denied
+```
+
+PASS.
+
+---
+
+## Security Test 3: Erin reads Audit data
+
+Run:
+
+```bash
+sudo -u erin cat /srv/veriqta/audit/audit-data.txt
+```
+
+Expected:
+
+```text
+audit evidence
+```
+
+---
+
+## Security Test 4: Erin attempts modification
+
+Run:
+
+```bash
+sudo -u erin bash -c 'echo "unauthorized change" >> /srv/veriqta/audit/audit-data.txt'
+```
+
+Expected:
+
+```text
+Permission denied
+```
+
+PASS.
+
+This demonstrates read-only access at the file level for the auditor.
+
+---
+
+# 17. Failure Simulation
+
+Now we deliberately break the system.
+
+This is one of the most important parts of the project.
+
+# Failure Lab 1: Wrong Group Ownership
+
+Suppose an administrator accidentally changes Development ownership.
+
+Break it deliberately:
+
+```bash
+sudo chown root:root /srv/veriqta/development
+```
+
+Do not fix it yet.
+
+Test:
+
+```bash
+sudo -u alice ls /srv/veriqta/development
+```
+
+You should receive an access error because the directory is no longer associated with `developers` and others have no access.
+
+---
+
+# 18. Troubleshooting
+
+Use a repeatable process:
+
+```text
+SYMPTOM
+   |
+   v
+IDENTITY
+   |
+   v
+PATH PERMISSIONS
+   |
+   v
+OWNERSHIP
+   |
+   v
+GROUP MEMBERSHIP
+   |
+   v
+CONFIGURATION
+   |
+   v
+FIX
+   |
+   v
+VERIFY
+```
+
+## Step 1: Observe the symptom
+
+Alice reports:
+
+```text
+Permission denied
+```
+
+Do not immediately run `chmod 777`.
+
+First investigate.
+
+---
+
+## Step 2: Confirm identity
+
+Run:
+
+```bash
+id alice
+```
+
+Ask:
+
+Is Alice still in `developers`?
+
+If yes, the account membership appears correct.
+
+---
+
+## Step 3: Inspect the target
+
+Run:
+
+```bash
+ls -ld /srv/veriqta/development
+```
+
+You should discover something like:
+
+```text
+root root
+```
+
+instead of:
+
+```text
+root developers
+```
+
+Now we have evidence.
+
+---
+
+## Step 4: Inspect the entire path
+
+Run:
+
+```bash
+namei -l /srv/veriqta/development/dev-data.txt
+```
+
+`namei -l` is extremely useful for permission troubleshooting because access can fail at any directory component in a path.
+
+Inspect each component.
+
+---
+
+## Step 5: Form the hypothesis
+
+Our hypothesis:
+
+```text
+Alice's membership is correct.
+
+The directory has the wrong owning group.
+
+Because "other" has no access, Alice cannot traverse the directory through her developers membership.
+```
+
+---
+
+## Step 6: Fix the root cause
+
+Run:
+
+```bash
+sudo chown root:developers /srv/veriqta/development
+```
+
+---
+
+## Step 7: Verify
+
+Run:
+
+```bash
+ls -ld /srv/veriqta/development
+```
+
+Then:
+
+```bash
+sudo -u alice cat /srv/veriqta/development/dev-data.txt
+```
+
+Access should be restored.
+
+That is troubleshooting.
+
+We did not randomly change permissions until something worked.
+
+---
+
+# Failure Lab 2: Remove Alice from the Group
+
+Deliberately remove Alice:
+
+```bash
+sudo gpasswd -d alice developers
+```
+
+Verify:
+
+```bash
+id alice
+```
+
+Test:
+
+```bash
+sudo -u alice ls /srv/veriqta/development
+```
+
+Access should fail.
+
+Diagnose:
+
+```bash
+id alice
+getent group developers
+ls -ld /srv/veriqta/development
+```
+
+The directory is correct.
+
+The account membership is wrong.
+
+Fix:
+
+```bash
+sudo usermod -aG developers alice
+```
+
+Verify:
+
+```bash
+id alice
+```
+
+Test again:
+
+```bash
+sudo -u alice ls /srv/veriqta/development
+```
+
+Recovery should succeed.
+
+---
+
+# Failure Lab 3: Remove the Execute Bit
+
+Record the current mode:
+
+```bash
+stat -c '%A %a %n' /srv/veriqta/development
+```
+
+Now deliberately remove group execute:
+
+```bash
+sudo chmod g-x /srv/veriqta/development
+```
+
+Try:
+
+```bash
+sudo -u alice cat /srv/veriqta/development/dev-data.txt
+```
+
+It should fail.
+
+Why?
+
+A directory requires execute permission for traversal.
+
+Restore the intended mode:
+
+```bash
+sudo chmod 2770 /srv/veriqta/development
+```
+
+Verify:
+
+```bash
+stat -c '%A %a %n' /srv/veriqta/development
+```
+
+Test:
+
+```bash
+sudo -u alice cat /srv/veriqta/development/dev-data.txt
+```
+
+---
+
+# Failure Lab 4: SSH Configuration Syntax Error
+
+We will not break the active SSH service.
+
+Instead, create a temporary configuration test.
+
+Run:
+
+```bash
+sudo cp /etc/ssh/sshd_config /tmp/sshd_config.lab
+```
+
+Append an invalid directive:
+
+```bash
+echo 'DefinitelyNotARealSSHOption yes' | sudo tee -a /tmp/sshd_config.lab
+```
+
+Validate the temporary configuration:
+
+```bash
+sudo sshd -t -f /tmp/sshd_config.lab
+```
+
+You should receive an error identifying the unsupported option.
+
+This teaches an important operational habit:
+
+```text
+EDIT
+  ↓
+VALIDATE
+  ↓
+RELOAD/RESTART
+```
+
+not:
+
+```text
+EDIT
+  ↓
+RESTART
+  ↓
+HOPE
+```
+
+Remove the temporary file:
+
+```bash
+sudo rm /tmp/sshd_config.lab
+```
+
+---
+
+# Common Troubleshooting Scenarios
+
+## Problem: User exists but cannot access directory
+
+Check:
+
+```bash
+id username
+```
+
+Then:
+
+```bash
+namei -l /path/to/resource
+```
+
+Then:
+
+```bash
+ls -ld /path/to/resource
+```
+
+Questions:
+
+```text
+Is the user in the correct group?
+Does the group own the resource?
+Can the user traverse every parent directory?
+Does the target mode permit the required operation?
+```
+
+---
+
+## Problem: Group membership was just added but an existing session does not reflect it
+
+Check:
+
+```bash
+id
+```
+
+A user's running login session may still have the old supplementary group set.
+
+Log out and log back in.
+
+For controlled shell testing, `newgrp` can start a shell with a changed effective group context, but re-authentication is often the clearest test for a real login.
+
+---
+
+## Problem: sudo command rejected
+
+Run:
+
+```bash
+sudo -l
+```
+
+As an administrator, inspect another user's policy:
+
+```bash
+sudo -l -U carol
+```
+
+Validate configuration:
+
+```bash
+sudo visudo -cf /etc/sudoers
+```
+
+Do not "solve" the problem by adding the user to a broadly privileged group unless that level of privilege is actually required.
+
+---
+
+## Problem: SSH authentication fails
+
+Check service:
+
+```bash
+systemctl status ssh --no-pager
+```
+
+Check port:
+
+```bash
+sudo ss -ltnp | grep ':22'
+```
+
+Inspect recent logs:
+
+```bash
+sudo journalctl -u ssh -n 50 --no-pager
+```
+
+Check user SSH permissions:
+
+```bash
+sudo ls -ld /home/alice/.ssh
+sudo ls -l /home/alice/.ssh/authorized_keys
+```
+
+Validate server configuration:
+
+```bash
+sudo sshd -t
+```
+
+Troubleshooting should follow evidence.
+
+---
+
+# 19. Final Validation
+
+Run the audit:
+
+```bash
+cd ~/linux-user-access-management
+sudo ./scripts/access-audit.sh
+```
+
+Then manually verify:
+
+```bash
+getent group developers
+getent group operations
+getent group auditors
+```
+
+Check:
+
+```bash
+id alice
+id bob
+id carol
+id david
+id erin
+```
+
+Inspect resources:
+
+```bash
+sudo find /srv/veriqta -maxdepth 2 -printf '%M %u %g %p\n'
+```
+
+Check sudo:
+
+```bash
+sudo -l -U carol
+sudo -l -U david
+```
+
+Check SSH:
+
+```bash
+systemctl is-active ssh
+sudo sshd -t
+```
+
+---
+
+## Access Matrix
+
+Your final tests should establish approximately:
+
+```text
+                    Development   Operations   Audit
+Alice                    RW           NO         NO
+Bob                      RW           NO         NO
+Carol                    NO           RW         NO
+David                    NO           RW         NO
+Erin                     NO           NO         R
+```
+
+`RW` means the project has intentionally provided read/write collaboration for that team.
+
+`R` means the demonstrated audit file is readable but not writable.
+
+`NO` means access should be denied.
+
+---
+
+# Automation Test
+
+Run:
+
+```bash
+sudo ./scripts/access-audit.sh
+```
+
+Save evidence:
+
+```bash
+sudo ./scripts/access-audit.sh | tee evidence/access-audit.txt
+```
+
+Because the script contains privileged inspection, run it only in your lab and review any captured output before publishing it.
+
+Never publish sensitive host information blindly.
+
+---
+
+# 20. Portfolio Documentation
+
+Your technical implementation is only part of the project.
+
+Now document what you built.
+
+Your README should contain:
+
+```text
+# Linux User & Access Management System
+
+## Overview
+
+## Scenario
+
+## Problem
+
+## Objectives
+
+## Architecture
+
+## Environment
+
+## Access Model
+
+## Users
+
+## Groups
+
+## Directory Structure
+
+## Permission Design
+
+## Sudo Delegation
+
+## SSH Configuration
+
+## Automation
+
+## Security Controls
+
+## Testing
+
+## Failure Simulations
+
+## Troubleshooting
+
+## Results
+
+## Lessons Learned
+
+## Future Improvements
+
+## Cleanup
+```
+
+---
+
+## Architecture Documentation
+
+Update:
+
+```text
+docs/access-model.md
+```
+
+Document:
+
+```text
+User -> Team
+Team -> Group
+Group -> Resource
+Resource -> Permission
+Administrative task -> sudo rule
+Remote authentication -> SSH
+```
+
+Include your final access matrix.
+
+---
+
+## Security Documentation
+
+In:
+
+```text
+docs/security.md
+```
+
+document the controls you implemented:
+
+```text
+Group-based authorization
+Least-privilege directory permissions
+Restricted "other" access
+Setgid shared directories
+Limited sudo delegation
+SSH public-key demonstration
+Protected private key
+Account locking
+Account expiration demonstration
+Configuration validation
+Access testing
+```
+
+Also explain limitations.
+
+This is a lab, not an enterprise IAM platform.
+
+---
+
+## Troubleshooting Documentation
+
+In:
+
+```text
+docs/troubleshooting.md
+```
+
+document at least the three permission failures you investigated.
+
+For each:
+
+```text
+Symptom
+Expected behavior
+Evidence collected
+Root cause
+Fix
+Verification
+Prevention
+```
+
+Do not merely write:
+
+```text
+Permissions were wrong, so I fixed them.
+```
+
+Explain the investigation.
+
+---
+
+# Screenshot Evidence
+
+Capture useful evidence such as:
+
+1. Final project directory.
+2. `id alice`.
+3. `id carol`.
+4. Team group records.
+5. `/srv/veriqta` directory permissions.
+6. Successful Development access.
+7. Failed unauthorized access.
+8. Audit read-only test.
+9. Limited sudo policy.
+10. Audit script output.
+11. SSH service status.
+12. A failure diagnosis.
+13. Successful recovery.
+
+Do not capture:
+
+```text
+passwords
+private SSH keys
+password hashes
+tokens
+secrets
+sensitive host data
+```
+
+---
+
+# 21. GitHub Structure
+
+Your final repository can look like:
+
+```text
+linux-user-access-management/
+│
+├── README.md
+│
+├── docs/
+│   ├── access-model.md
+│   ├── security.md
+│   ├── troubleshooting.md
+│   └── cleanup.md
+│
+├── scripts/
+│   └── access-audit.sh
+│
+├── tests/
+│   └── test-access.sh
+│
+├── evidence/
+│   └── sanitized-access-audit.txt
+│
+├── screenshots/
+│
+└── LICENSE
+```
+
+Do not upload:
+
+```text
+/etc/shadow
+SSH private keys
+real passwords
+/etc/sudoers copies containing sensitive environment information
+credentials
+tokens
+unreviewed system logs
+```
+
+---
+
+# Build the Automated Access Test
+
+We created the file earlier.
+
+Open:
+
+```bash
+nano tests/test-access.sh
+```
+
+Add:
+
+```bash
+#!/usr/bin/env bash
+
+set -u
+
+PASS=0
+FAIL=0
+
+pass() {
+    echo "[PASS] $1"
+    PASS=$((PASS + 1))
+}
+
+fail() {
+    echo "[FAIL] $1"
+    FAIL=$((FAIL + 1))
+}
+
+test_read() {
+    local user="$1"
+    local file="$2"
+    local description="$3"
+
+    if sudo -u "$user" test -r "$file"; then
+        pass "$description"
+    else
+        fail "$description"
+    fi
+}
+
+test_denied_read() {
+    local user="$1"
+    local file="$2"
+    local description="$3"
+
+    if sudo -u "$user" test -r "$file"; then
+        fail "$description"
+    else
+        pass "$description"
+    fi
+}
+
+test_write() {
+    local user="$1"
+    local file="$2"
+    local description="$3"
+
+    if sudo -u "$user" test -w "$file"; then
+        pass "$description"
+    else
+        fail "$description"
+    fi
+}
+
+test_denied_write() {
+    local user="$1"
+    local file="$2"
+    local description="$3"
+
+    if sudo -u "$user" test -w "$file"; then
+        fail "$description"
+    else
+        pass "$description"
+    fi
+}
+
+echo "=========================================="
+echo " Access Control Test Suite"
+echo "=========================================="
+
+test_read alice /srv/veriqta/development/dev-data.txt \
+    "Alice can read Development data"
+
+test_write bob /srv/veriqta/development/dev-data.txt \
+    "Bob can write Development data"
+
+test_denied_read erin /srv/veriqta/development/dev-data.txt \
+    "Erin cannot read Development data"
+
+test_denied_read alice /srv/veriqta/operations/ops-data.txt \
+    "Alice cannot read Operations data"
+
+test_read carol /srv/veriqta/operations/ops-data.txt \
+    "Carol can read Operations data"
+
+test_read erin /srv/veriqta/audit/audit-data.txt \
+    "Erin can read Audit data"
+
+test_denied_write erin /srv/veriqta/audit/audit-data.txt \
+    "Erin cannot modify Audit data"
+
+echo
+echo "Passed: $PASS"
+echo "Failed: $FAIL"
+
+if (( FAIL > 0 )); then
+    exit 1
+fi
+
+exit 0
+```
+
+Save.
+
+Make executable:
+
+```bash
+chmod +x tests/test-access.sh
+```
+
+Run:
+
+```bash
+sudo ./tests/test-access.sh
+```
+
+A correctly configured lab should report all tests as PASS.
+
+If not, do not modify the script simply to make the tests green.
+
+Investigate the failed control.
+
+That is how tests should be used.
+
+---
+
+# 22. Resume Entry
+
+## Project Title
+
+Linux User & Access Management System
+
+## Technologies
+
+```text
+Ubuntu Linux
+Bash
+Linux users/groups
+POSIX permissions
+sudo
+OpenSSH
+systemd
+journalctl
+```
+
+## Skills Demonstrated
+
+```text
+Linux administration
+Identity management
+Group-based authorization
+File permissions
+Privilege delegation
+SSH configuration
+Bash scripting
+Access testing
+Troubleshooting
+Security hardening fundamentals
+Technical documentation
+```
+
+## Resume Bullet Examples
+
+* Designed and implemented a lab-based Linux access-management environment using users, groups, ownership, file permissions, and controlled sudo delegation.
+
+* Built Bash-based access auditing and validation tools to verify account membership, shared-directory authorization, and administrative privilege configuration.
+
+* Simulated and diagnosed Linux access failures involving incorrect ownership, missing group membership, directory permissions, and SSH configuration validation.
+
+Do not write that you managed enterprise production IAM.
+
+You built and tested a realistic laboratory project.
+
+That is already legitimate experience to discuss.
+
+---
+
+# 23. Interview Preparation
+
+## Basic Question 1
+
+**What is a Linux UID?**
+
+A UID is a numeric user identifier used by Linux to identify a user account internally.
+
+---
+
+## Basic Question 2
+
+**What is a GID?**
+
+A GID is a numeric identifier associated with a group.
+
+---
+
+## Basic Question 3
+
+**What is the difference between a primary and supplementary group?**
+
+A user has a primary group associated with their account and may also belong to additional supplementary groups used to grant access to other resources.
+
+---
+
+## Technical Question 1
+
+**What does `chmod 2770 directory` mean?**
+
+Answer:
+
+```text
+2 = setgid
+7 = owner rwx
+7 = group rwx
+0 = no permissions for others
+```
+
+For a directory, setgid causes new entries to inherit the directory's group ownership.
+
+---
+
+## Technical Question 2
+
+**Why did you use groups rather than assigning permissions individually?**
+
+Good answer:
+
+Group-based access reduces repeated per-user permission management and makes authorization easier to administer and audit as users join or leave teams.
+
+---
+
+## Technical Question 3
+
+**Why not use `chmod 777`?**
+
+Because it grants read, write, and execute permissions to everyone covered by those mode bits, usually violating least privilege and exposing resources unnecessarily.
+
+---
+
+## Technical Question 4
+
+**What does `usermod -aG` do?**
+
+`-G` specifies supplementary groups.
+
+`-a` appends those groups without replacing the user's existing supplementary memberships.
+
+---
+
+## Troubleshooting Question
+
+**A developer suddenly receives Permission denied. What do you check?**
+
+A strong investigation might include:
+
+```bash
+id username
+namei -l /path/to/resource
+ls -ld /path/to/resource
+getent group expected-group
+```
+
+Then inspect ownership, group membership, directory traversal permissions, target permissions, ACLs if present, and relevant security mechanisms before making changes.
+
+---
+
+## Scenario Question
+
+**Alice was added to `developers`, but her existing terminal still does not show the membership. Why?**
+
+Her current login session may have been created before the membership change. A new authenticated session will obtain the updated supplementary group set.
+
+---
+
+## Deep-Dive Question
+
+**Why isn't setgid alone enough for shared collaboration?**
+
+Setgid on a directory controls inherited group ownership.
+
+It does not automatically guarantee that the resulting file mode gives that group write access.
+
+`umask`, explicit modes, ACLs, and application behavior can affect the final permissions.
+
+---
+
+## Deep-Dive Question
+
+**Why is password locking only part of deprovisioning?**
+
+Because access may involve mechanisms beyond password authentication, including SSH keys, existing sessions, sudo privileges, scheduled jobs, service credentials, application accounts, and other authorization paths.
+
+---
+
+## Scenario Question
+
+**Why validate SSH configuration before restarting SSH?**
+
+Because an invalid configuration may prevent the daemon from restarting successfully and could cause remote-access disruption.
+
+Use:
+
+```bash
+sudo sshd -t
+```
+
+before applying changes.
+
+---
+
+# 24. Cleanup
+
+Cleanup is part of the project.
+
+You should understand what you created and how to remove it.
+
+## Before Cleanup
+
+Decide which outcome you want.
+
+### Option A: Keep the portfolio
+
+Keep:
+
+```text
+~/linux-user-access-management/
+```
+
+This contains your:
+
+```text
+README
+documentation
+scripts
+tests
+sanitized evidence
+screenshots
+```
+
+### Option B: Remove the lab environment
+
+Remove the system changes while retaining the portfolio.
+
+That is what we will do below.
+
+---
+
+# Cleanup Inventory
+
+We created:
+
+```text
+Users:
+alice
+bob
+carol
+david
+erin
+
+Groups:
+developers
+operations
+auditors
+
+Directories:
+/srv/veriqta
+
+sudo configuration:
+/etc/sudoers.d/operations-lab
+
+Alice SSH lab material:
+/home/alice/.ssh
+
+Project:
+~/linux-user-access-management
+```
+
+The SSH package itself may have existed before the project.
+
+Do not remove system packages simply because they were used in the lab.
+
+---
+
+## Step 1: Remove sudo delegation
+
+First inspect:
+
+```bash
+sudo cat /etc/sudoers.d/operations-lab
+```
+
+Confirm it is the file created for this lab.
+
+Then:
+
+```bash
+sudo rm /etc/sudoers.d/operations-lab
+```
+
+Validate:
+
+```bash
+sudo visudo -cf /etc/sudoers
+```
+
+---
+
+## Step 2: Remove shared lab data
+
+⚠️ WARNING: The next command permanently deletes the `/srv/veriqta` lab directory and everything beneath it.
+
+Inspect first:
+
+```bash
+sudo find /srv/veriqta -maxdepth 3 -ls
+```
+
+Only after confirming it contains lab data:
+
+```bash
+sudo rm -rf /srv/veriqta
+```
+
+Verify:
+
+```bash
+test ! -e /srv/veriqta && echo "Lab directory removed"
+```
+
+Never use `rm -rf` casually.
+
+Always confirm the exact path first.
+
+---
+
+## Step 3: Remove lab users
+
+⚠️ These commands remove the lab accounts and their home directories.
+
+Run:
+
+```bash
+sudo userdel -r alice
+sudo userdel -r bob
+sudo userdel -r carol
+sudo userdel -r david
+sudo userdel -r erin
+```
+
+You may see warnings about mail spools or already absent files. Read them rather than ignoring them.
+
+Verify:
+
+```bash
+for user in alice bob carol david erin; do
+    if getent passwd "$user" >/dev/null; then
+        echo "$user still exists"
+    else
+        echo "$user removed"
+    fi
+done
+```
+
+---
+
+## Step 4: Remove groups
+
+Run:
+
+```bash
+sudo groupdel developers
+sudo groupdel operations
+sudo groupdel auditors
+```
+
+Verify:
+
+```bash
+getent group developers
+getent group operations
+getent group auditors
+```
+
+No matching output should remain.
+
+---
+
+## Step 5: Keep the portfolio
+
+Check:
+
+```bash
+ls -la ~/linux-user-access-management
+```
+
+Your project documentation should still exist.
+
+This demonstrates the difference between:
+
+```text
+lab infrastructure
+```
+
+and:
+
+```text
+portfolio artifact
+```
+
+---
+
+# 25. Cleanup Verification
+
+Check users:
+
+```bash
+getent passwd alice
+getent passwd bob
+getent passwd carol
+getent passwd david
+getent passwd erin
+```
+
+No matching entries should remain.
+
+Check groups:
+
+```bash
+getent group developers
+getent group operations
+getent group auditors
+```
+
+No matching entries should remain.
+
+Check lab directory:
+
+```bash
+ls -ld /srv/veriqta
+```
+
+Expected:
+
+```text
+No such file or directory
+```
+
+Check sudo file:
+
+```bash
+test -e /etc/sudoers.d/operations-lab \
+    && echo "sudo file still exists" \
+    || echo "sudo lab file removed"
+```
+
+Check sudo configuration:
+
+```bash
+sudo visudo -cf /etc/sudoers
+```
+
+Check SSH:
+
+```bash
+systemctl is-active ssh
+```
+
+The normal SSH service can remain because it is not inherently disposable project data.
+
+---
+
+# 26. Project Reflection
+
+Before marking the project complete, answer these questions in your documentation.
+
+1. What access-management problem did the project solve?
+
+2. Why did you create groups instead of managing every user's access individually?
+
+3. How do Linux ownership and permissions work together?
+
+4. What problem did the setgid directory bit solve?
+
+5. Why did setgid not automatically guarantee group write access?
+
+6. How did `umask` affect shared files?
+
+7. What administrative privileges did Operations receive?
+
+8. Why did you avoid unrestricted sudo access?
+
+9. Which access failure was easiest to diagnose?
+
+10. Which failure required the most investigation?
+
+11. Why is `namei -l` useful for permission troubleshooting?
+
+12. What is the difference between authentication and authorization?
+
+13. Why are SSH private keys sensitive?
+
+14. Why should SSH configuration be validated before restart?
+
+15. Why is locking a password not necessarily complete account deprovisioning?
+
+16. Which parts of this design would need to change for hundreds or thousands of users?
+
+17. When might centralized identity management be preferable to local accounts?
+
+18. What evidence proves that unauthorized access was actually blocked?
+
+19. What did the automated test suite prove?
+
+20. How would you explain this project to an interviewer in two minutes?
+
+---
+
+# 27. Final Completion Checklist
+
+Do not mark Project 01 complete until you can check these yourself.
+
+### Environment
+
+```text
+[ ] Ubuntu 24.04 LTS lab created
+[ ] sudo verified
+[ ] SSH service verified
+[ ] Project repository structure created
+```
+
+### Identity
+
+```text
+[ ] Five lab users created
+[ ] Three team groups created
+[ ] Correct memberships assigned
+[ ] UID/GID concepts understood
+[ ] Account status inspected
+```
+
+### Access Control
+
+```text
+[ ] Shared directories created
+[ ] Ownership configured
+[ ] Permissions configured
+[ ] Setgid tested
+[ ] umask behavior observed
+[ ] Authorized access tested
+[ ] Unauthorized access tested
+```
+
+### Privilege Management
+
+```text
+[ ] Limited sudo policy created
+[ ] sudo syntax validated
+[ ] Allowed command tested
+[ ] Unauthorized administrative command denied
+```
+
+### Account Security
+
+```text
+[ ] Password locking tested
+[ ] Account unlocking tested
+[ ] Password-aging information inspected
+[ ] Account expiration demonstrated
+```
+
+### SSH
+
+```text
+[ ] SSH service verified
+[ ] ED25519 lab key generated
+[ ] Public/private key distinction understood
+[ ] authorized_keys demonstrated
+[ ] SSH file permissions checked
+[ ] SSH configuration syntax validation performed
+```
+
+### Automation
+
+```text
+[ ] Access audit script created
+[ ] Script made executable
+[ ] Script successfully executed
+[ ] Audit output interpreted
+```
+
+### Testing
+
+```text
+[ ] Functional tests completed
+[ ] Authorization tests completed
+[ ] Read-only Audit access verified
+[ ] Automated access tests completed
+[ ] Failed tests investigated rather than ignored
+```
+
+### Failure Engineering
+
+```text
+[ ] Wrong ownership simulated
+[ ] Missing group membership simulated
+[ ] Missing directory execute permission simulated
+[ ] Invalid SSH configuration tested safely
+[ ] Root causes identified
+[ ] Systems recovered
+[ ] Recovery verified
+```
+
+### Portfolio
+
+```text
+[ ] README completed
+[ ] Access model documented
+[ ] Security controls documented
+[ ] Troubleshooting documented
+[ ] Screenshots captured
+[ ] Evidence sanitized
+[ ] No credentials included
+[ ] No private SSH keys included
+```
+
+### Career Preparation
+
+```text
+[ ] Resume bullets prepared
+[ ] Basic interview questions understood
+[ ] Technical questions understood
+[ ] Troubleshooting questions practiced
+[ ] Project can be explained without reading the README
+```
+
+### Cleanup
+
+```text
+[ ] Lab sudo rule removed
+[ ] Lab shared directories removed
+[ ] Lab users removed
+[ ] Lab groups removed
+[ ] Cleanup verified
+[ ] Portfolio files retained
+```
+
+## Project 01 Completion Standard
+
+The project is complete when you can explain this entire chain:
+
+```text
+IDENTITY
+   ↓
+USER
+   ↓
+GROUP MEMBERSHIP
+   ↓
+RESOURCE OWNERSHIP
+   ↓
+PERMISSIONS
+   ↓
+AUTHORIZATION
+   ↓
+PRIVILEGE DELEGATION
+   ↓
+REMOTE ACCESS
+   ↓
+AUDITING
+   ↓
+TESTING
+   ↓
+FAILURE
+   ↓
+DIAGNOSIS
+   ↓
+RECOVERY
+```
+
+At that point, you have done considerably more than practice Linux user commands. You have designed, implemented, secured, tested, deliberately broken, diagnosed, recovered, documented, and safely dismantled a complete Linux access-management lab.
+
+That is the standard the remaining Junior Linux World portfolio projects should maintain.
