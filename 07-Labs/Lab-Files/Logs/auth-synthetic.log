@@ -1,4 +1,0 @@
-2026-06-18T09:00:01Z lab-ssh sshd[4101]: Accepted publickey for amira from 192.0.2.21 port 49152
-2026-06-18T09:03:18Z lab-ssh sshd[4188]: Failed publickey for invalid user backup from 192.0.2.44 port 51001
-2026-06-18T09:03:21Z lab-ssh sshd[4188]: Connection closed by invalid user backup 192.0.2.44 port 51001
-2026-06-18T09:12:44Z lab-ssh sudo[4310]: amira : TTY=pts/0 ; PWD=/home/amira ; USER=root ; COMMAND=/usr/bin/systemctl status demo.service
